@@ -1,0 +1,600 @@
+{
+  "name": "Agentic ai",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?token=apify_api_GMaA4MwY7Fhji2DvffBoln5GgocpqP2mZAQc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"count\": 100,\n    \"scrapeCompany\": true,\n    \"urls\": [\n        \"https://www.linkedin.com/jobs/search/?position=1&pageNum=0\"\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        480
+      ],
+      "id": "7fef2af6-9369-4570-b140-e02c316cd09e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  // Clean HTML tags from the job description\n  const cleanText = data.descriptionText\n    ? data.descriptionText.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim()\n    : '';\n\n  return {\n    json: {\n      title: data.title || 'N/A',\n      company: data.companyName || 'N/A',\n      location: data.companyAddress?.addressLocality || 'N/A',\n      salary: data.salary || 'N/A',\n      applicants: data.applicantsCount || 'N/A',\n      applyUrl: data.applyUrl || '',\n      description: cleanText\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        480
+      ],
+      "id": "c8ea13d0-5c8e-4240-9406-2e1915b79f34",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        -240
+      ],
+      "id": "2bb6e4ae-e62f-45f4-bdcf-28adaf9f47c9",
+      "name": "Webhook",
+      "webhookId": "47eeaca7-00df-4d92-a270-e2e81292c35e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert AI Resume Parser and Job Intelligence Assistant.\n\nYour task is to read the resume text carefully and extract only the following information in clean, machine-readable JSON format:\n\n- skills: all core and technical skills mentioned in the resume  \n- years_of_experience: total years of professional or project-based experience (estimate if not explicitly stated)  \n- technologies_familiar_with: list all tools, programming languages, frameworks, libraries, and platforms mentioned\n\n📦 Output Format (must be strictly valid JSON — no markdown, no explanations):\n{\n  \"skills\": [],\n  \"years_of_experience\": \"\",\n  \"technologies_familiar_with\": []\n}\n\nRules:\n- If any field cannot be determined, leave it empty (`\"\"` or `[]`).\n- Combine similar items and remove duplicates.\n- Do not include unrelated text, headers, or markdown symbols.\n- Output **only** JSON.\n\nResume Text:\n{{ $('Extract from File').item.json.text }}\n",
+        "options": {
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "09a6b21a-22da-48ab-9885-31af6a54f72f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        368,
+        256
+      ],
+      "id": "30250609-d9d2-492c-8020-8156cb6314d4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BDNp4bEOqVY7vhwo",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -240
+      ],
+      "id": "00ece764-3d90-425e-9e61-6cbfd82a2505",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI Job Description Parser.\n\nYour task is to analyze the given job description text(s) and extract only the following three elements:\n\n1. skills → List of specific skills or soft skills mentioned (e.g., \"communication\", \"leadership\", \"data analysis\", \"teamwork\")\n2. years_of_experience → The minimum or range of experience required (e.g., \"3+\", \"2-5\", \"entry-level\", or \"not specified\")\n3. technologies_required → List of technical tools, frameworks, or programming languages mentioned (e.g., \"Python\", \"TensorFlow\", \"React\", \"SQL\")\n\n🎯 Guidelines:\n- Output **valid JSON only** (no extra text, no markdown).\n- If any element cannot be found, return an empty string or empty array.\n- Extract from *all* provided job descriptions.\n- Combine similar technologies and remove duplicates.\n\n📦 Output Format:\n{\n    {\n      \"title\": \"\",\n      \"skills\": [],\n      \"years_of_experience\": \"\",\n      \"technologies_required\": []\n    }\n}\n\n📄 Job Descriptions:\n{{ $json.description }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        480
+      ],
+      "id": "084c21c7-b468-4399-9efc-9880b6b959ff",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        704
+      ],
+      "id": "e3af92c4-9233-4618-83f9-5b77a7a35bcb",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BDNp4bEOqVY7vhwo",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let data = $json.output;\n\n// If it's a string, clean and parse it\nif (typeof data === 'string') {\n  // Remove Markdown code fences and labels\n  data = data.replace(/```json|```/g, '').trim();\n  try {\n    data = JSON.parse(data);\n  } catch (error) {\n    throw new Error('Failed to parse cleaned JSON: ' + error.message);\n  }\n}\n\n// Return everything as one proper structured JSON object\nreturn [\n  {\n    json: {\n      skills: data.skills || [],\n      years_of_experience: data.years_of_experience || \"\",\n      technologies_familiar_with: data.technologies_familiar_with || []\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        16
+      ],
+      "id": "09c3201f-04c4-4382-a3f4-2856ccfdfb1f",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Helper to extract \"text\" fields recursively\nfunction extractTexts(obj) {\n  let texts = [];\n  if (Array.isArray(obj)) {\n    for (const el of obj) texts = texts.concat(extractTexts(el));\n  } else if (obj && typeof obj === \"object\") {\n    for (const [k, v] of Object.entries(obj)) {\n      if (k === \"text\" && typeof v === \"string\") texts.push(v);\n      else texts = texts.concat(extractTexts(v));\n    }\n  }\n  return texts;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  let rawOutput = \"\";\n\n  // Try to extract raw content from the AI Agent output\n  if (item.json.response?.generations) {\n    const texts = extractTexts(item.json.response.generations);\n    rawOutput = texts.join(\"\\n\");\n  } else if (item.json.output) {\n    rawOutput = item.json.output;\n  } else if (item.json.text) {\n    rawOutput = item.json.text;\n  } else {\n    rawOutput = JSON.stringify(item.json);\n  }\n\n  // Clean markdown fences\n  const cleanText = rawOutput\n    .replace(/```json/g, \"\")\n    .replace(/```/g, \"\")\n    .trim();\n\n  // Extract all JSON blocks\n  const matches = cleanText.match(/\\{[\\s\\S]*?\\}(?=\\s*(?:\\{|\\[|$))/g);\n\n  if (matches) {\n    for (const match of matches) {\n      try {\n        const parsed = JSON.parse(match);\n        results.push({ json: parsed });\n      } catch {\n        results.push({ json: { error: \"Parse failed\", raw: match } });\n      }\n    }\n  } else {\n    results.push({ json: { error: \"No JSON found\", raw: cleanText } });\n  }\n}\n\n// ✅ Return all extracted results as items\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        480
+      ],
+      "id": "530c7f25-dac6-40fd-8164-70a9e9bf878e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1iIMV9fj46Hd3dunV3gnEZ4l6kqt6C_TYl1GzXFbIZco/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iIMV9fj46Hd3dunV3gnEZ4l6kqt6C_TYl1GzXFbIZco/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title }}",
+            "skills": "={{ $json.skills }}",
+            "years of experience": "={{ $json.years_of_experience }}",
+            "technologies required": "={{ $json.technologies_required }}",
+            "company": "={{ $('Code in JavaScript').item.json.company }}",
+            "application link": "={{ $('Code in JavaScript').item.json.applyUrl }}"
+          },
+          "matchingColumns": [
+            "title"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "years of experience",
+              "displayName": "years of experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "technologies required",
+              "displayName": "technologies required",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "application link",
+              "displayName": "application link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        480
+      ],
+      "id": "dddda347-aacb-4ac3-af40-37b8367504e8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "R1Ii2EjEp59q6UHe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1iIMV9fj46Hd3dunV3gnEZ4l6kqt6C_TYl1GzXFbIZco/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iIMV9fj46Hd3dunV3gnEZ4l6kqt6C_TYl1GzXFbIZco/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        16
+      ],
+      "id": "61b5031a-dcc1-4639-a72f-9212b5447b59",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "R1Ii2EjEp59q6UHe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Candidate's resume data (from previous node)\nconst resume_skill = $('Code in JavaScript1').first().json.skills;\nconst resume_exp = $('Code in JavaScript1').first().json.years_of_experience;\nconst resume_tech = $('Code in JavaScript1').first().json.technologies_familiar_with;\n\n// Job listings (from Google Sheet)\nconst jobs = $items('Get row(s) in sheet').map(item => item.json);\n\n// --- Normalize resume data safely ---\nfunction normalizeArray(value) {\n  if (!value) return [];\n  if (Array.isArray(value)) return value;\n  try {\n    const parsed = JSON.parse(value);\n    return Array.isArray(parsed) ? parsed : [parsed];\n  } catch {\n    return String(value)\n      .split(/[,;]+/)\n      .map(v => v.trim())\n      .filter(Boolean);\n  }\n}\n\n// Convert and normalize resume data\nconst resumeSkills = normalizeArray(resume_skill).map(s => s.toLowerCase());\nconst techStack = normalizeArray(resume_tech).map(t => t.toLowerCase());\nconst exp = parseFloat(resume_exp || 0);\n\n// --- Match jobs ---\nlet matchedJobs = [];\n\nfor (const job of jobs) {\n  const jobSkills = normalizeArray(job.skills).map(s => s.toLowerCase());\n  const jobTech = normalizeArray(job[\"technologies required\"]).map(t => t.toLowerCase());\n\n  const skillMatch = resumeSkills.filter(s => jobSkills.includes(s)).length;\n  const techMatch = techStack.filter(t => jobTech.includes(t)).length;\n\n  const score =\n    skillMatch * 2 +\n    techMatch +\n    (exp >= (parseFloat(job[\"years of experience\"]) || 0) ? 1 : 0);\n\n  if (score > 0) {\n    matchedJobs.push({\n      title: job.title || job[\"job title\"] || \"Unknown\",\n      company: job.company || job[\"company name\"] || \"Unknown\",\n      match_score: score,\n      matched_skills: skillMatch,\n      matched_technologies: techMatch,\n    });\n  }\n}\n\n// Sort best matches first\nmatchedJobs.sort((a, b) => b.match_score - a.match_score);\n\n// Return results\nreturn [{ json: { matched_jobs: matchedJobs } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        256
+      ],
+      "id": "d9c5a49d-db82-4744-a87c-3632b1f4d6d9",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the first input item\nconst input = $input.first().json;\n\n// Ensure matched_jobs array exists\nconst jobs = Array.isArray(input.matched_jobs) ? input.matched_jobs : [];\n\n// Sort by match_score descending\nconst sorted = jobs.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));\n\n// Take the top 5 jobs\nconst top5 = sorted.slice(0, 5);\n\n// Return each job as a separate output item\nreturn top5.map(job => ({\n  json: {\n    title: job.title || \"Unknown Title\",\n    company: job.company || \"Company not specified\",\n    description: job.description || \"No description available\",\n    match_score: job.match_score || 0,\n    matched_skills: job.matched_skills || 0,\n    matched_technologies: job.matched_technologies || 0,\n    application_link: job.application_link || \"N/A\"\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        256
+      ],
+      "id": "f67a5b5f-b83f-4280-a789-672ee3ca8008",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Edit Fields1\"].json[\"email id\"] }}\n",
+        "subject": "=",
+        "message": "=<h2>Top 5 Job Matches for You</h2>\n<ul>\n{{ \n  ($json.top_matches || [])\n    .slice(0, 5)\n    .map(job => '<li><strong>' + (job.title || 'Untitled Job') + '</strong><br>' +\n      'Company: ' + (job.company || 'Not specified') + '<br>' +\n      'Score: ' + (job.match_score || 0) + '<br>' +\n      '<a href=\"' + (job.application_link || '#') + '\" target=\"_blank\">Apply Here</a><br>' +\n      (job.description || '') + \n    '</li>')\n    .join('')\n}}\n</ul>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1728,
+        0
+      ],
+      "id": "2fefbf9a-64b0-4cfb-bb2e-7557dab859e6",
+      "name": "Send a message",
+      "webhookId": "60c4dae3-b52f-4d96-a6bb-e636865bafae",
+      "alwaysOutputData": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jnG5isSrdpQlH1tZ",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a893e6-3e02-4621-8a58-f7ebb213728c",
+              "name": "email id",
+              "value": "={{ $('Webhook').item.json.body.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -240
+      ],
+      "id": "172ef8d2-94a8-4f71-b823-c2e1feba5368",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect top 5 matches and email from previous nodes\nconst email = $node[\"Edit Fields1\"].json[\"email id\"];\nconst topMatches = $items().map(i => i.json).flat().slice(0, 5);\n\n// Add default company and description fields to prevent \"undefined\"\nconst enrichedMatches = topMatches.map(job => ({\n  title: job.title || \"Unknown Title\",\n  company: job.company || \"Company not specified\",  // 👈 Fix here\n  description: job.description || \"No description available\",\n  match_score: job.match_score || 0,\n  matched_skills: job.matched_skills || 0,\n  matched_technologies: job.matched_technologies || 0\n}));\n\nreturn [\n  {\n    json: {\n      email,\n      top_matches: enrichedMatches\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "5457bff4-0a96-44e5-843d-30d031154708",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Code in JavaScript5').item.json.top_matches }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1968,
+        0
+      ],
+      "id": "d8700d1a-bc38-46c4-aa46-757424f0e694",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "319d85be-72b0-44eb-a420-d973ab1b751f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce3330912a806c87d53d46cbffc4a62c3326be1dde1e623e2216957a6e7a6fa2"
+  },
+  "id": "rRPLpNDJtcZTvQzX",
+  "tags": []
+}
