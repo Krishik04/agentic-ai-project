@@ -15,11 +15,11 @@ User uploads resume → Lovable UI posts to n8n webhook → n8n extracts resume 
 ---
 
 ## Workflow Snapshot (Nodes & Roles)
-<img width="1376" height="664" alt="workflow" src="https://github.com/user-attachments/assets/77b6505f-1d73-484b-a1b0-cbd5ebf214b6" />
 
 ### Webhook Trigger (Webhook - Resume Upload)
 - Receive form data: `{ email, resume_url, filename }` or file binary.
 - Respond immediately with ack; workflow continues.
+<img width="1376" height="664" alt="workflow" src="https://github.com/user-attachments/assets/77b6505f-1d73-484b-a1b0-cbd5ebf214b6" />
 
 ### (Optional) Download Resume (HTTP Request or Binary node)
 - If `resume_url` is blob/remote URL, download file; ensure binary present.
@@ -43,12 +43,19 @@ User uploads resume → Lovable UI posts to n8n webhook → n8n extracts resume 
 
 ### Email / Notification (Gmail or SMTP)
 - Compose HTML email showing top 5 matches with clickable links, send to user.
+- <img width="1429" height="723" alt="email " src="https://github.com/user-attachments/assets/6bd64e89-d76a-44df-8185-0b131b43eec7" />
+<img width="1437" height="725" alt="Screenshot 5" src="https://github.com/user-attachments/assets/12a5d0cc-a80a-4130-b9ea-1501c8f62a67" />
+
+
 
 ### Google Sheets (Append or Update Row)
 - Append candidate + top matches or update candidate row.
 
 ### Respond to Lovable (Respond to Webhook)
 - Return JSON payload to Lovable dashboard showing top 5 matches live to user.
+-<img width="1435" height="725" alt="Screenshot 4" src="https://github.com/user-attachments/assets/7ac3bcb4-06c5-4684-b769-2d5528bf7857" />
+
+
 
 ### (Optional) Logging / Monitoring
 - Slack/Discord notifications for failures; logs to DB.
