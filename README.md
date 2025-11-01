@@ -15,6 +15,7 @@ User uploads resume → Lovable UI posts to n8n webhook → n8n extracts resume 
 ---
 
 ## Workflow Snapshot (Nodes & Roles)
+<img width="1376" height="664" alt="workflow" src="https://github.com/user-attachments/assets/77b6505f-1d73-484b-a1b0-cbd5ebf214b6" />
 
 ### Webhook Trigger (Webhook - Resume Upload)
 - Receive form data: `{ email, resume_url, filename }` or file binary.
