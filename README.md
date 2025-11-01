@@ -4,7 +4,7 @@
 Automate end-to-end resume parsing, job scraping & matching, LLM job reasoning (Gemini), and deliver results to the user (email + Lovable dashboard + Google Sheets).
 
 **Main sources:** LinkedIn job listings (scraper), Google Sheets job store (fallback), user resume uploads (Lovable web UI).  
-**Models:** Google Gemini (preferred) via Lovable; optional fallback to Azure OpenAI.  
+**Models:** Google Gemini (preferred) via Lovable;   
 **Primary tools:** n8n (workflow automation), Lovable AI (frontend/agent), Google Sheets, Gmail (or SMTP), LinkedIn scraper (custom or Apify/puppeteer), ngrok for local testing.
 
 ---
@@ -254,7 +254,5 @@ If using Apify or custom puppeteer:
 ## Deliverables
 - ✅ Full n8n workflow export — **SmartJobMatch_Automation.json**
 - ✅ Lovable agent prompt + webhook schema
-- ✅ React + Tailwind dashboard prompt (optional)
-- ✅ Deployment guide (ngrok → self-host → CORS → credentials)
 
 ---
