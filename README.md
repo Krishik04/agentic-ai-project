@@ -21,9 +21,6 @@ User uploads resume → Lovable UI posts to n8n webhook → n8n extracts resume 
 - Respond immediately with ack; workflow continues.
 <img width="1376" height="664" alt="workflow" src="https://github.com/user-attachments/assets/77b6505f-1d73-484b-a1b0-cbd5ebf214b6" />
 
-### (Optional) Download Resume (HTTP Request or Binary node)
-- If `resume_url` is blob/remote URL, download file; ensure binary present.
-
 ### Resume Extractor (Code in JavaScript - Extract Resume)
 - Extract text from binary PDF/DOCX (use PDF parsing library or Gemini Vision for OCR).  
 - Output structured JSON: `{ name, email, skills: [...], years_of_experience, technologies: [...] }`  
@@ -53,9 +50,6 @@ User uploads resume → Lovable UI posts to n8n webhook → n8n extracts resume 
 -<img width="1435" height="725" alt="Screenshot 4" src="https://github.com/user-attachments/assets/7ac3bcb4-06c5-4684-b769-2d5528bf7857" />
 <img width="1437" height="725" alt="Screenshot 5" src="https://github.com/user-attachments/assets/12a5d0cc-a80a-4130-b9ea-1501c8f62a67" />
 
-
-### (Optional) Logging / Monitoring
-- Slack/Discord notifications for failures; logs to DB.
 
 ---
 
