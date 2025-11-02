@@ -10,6 +10,7 @@ Automate end-to-end resume parsing, job scraping & matching, LLM job reasoning (
 ---
 
 Lovable Ai - https://smart-job-match-ai.lovable.app/dashboard
+n8n Workflow - http://localhost:5678/workflow/rRPLpNDJtcZTvQzX
 
 ---
 ## High-level Flow (One-Line)
